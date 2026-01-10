@@ -1,7 +1,7 @@
 include "emu8086.inc"
 
 ; Basic XOR File Encryptor
-
+                
 org 100h
 
     ;CMDLINE arguments
@@ -30,7 +30,7 @@ org 100h
         je filename_done            ; check if we reached the filename end
         
         cmp byte ptr [si], 0dh      ; check carriage return = end of cmdline args ; if si is carriage return, its end
-        je filename_done
+        je show_usage
                       
         cmp cl, 0                   ; check if filename length is zero ; check if we processed all chars from cmdline
         je filename_done        
@@ -49,7 +49,7 @@ org 100h
     ; End of filename
     filename_done:
         mov byte ptr [di], 0        ; null terminate filename
-                
+                            
     ; Parse password
     skip_spaces2:                   
         cmp cl, 0                   ; check if cmdline length is zero
@@ -96,7 +96,7 @@ org 100h
         PRINTN 'Usage: program filename password'
         PRINTN 'Output will be filename.xored'
         jmp done
-    
+        
     ; Errors    
     arg_error:
         PRINTN 'Error: invalid arguments'
@@ -107,7 +107,7 @@ org 100h
         ; Copy input filename to output filename
         mov si, offset filename
         mov di, offset out_filename
-    
+                                              
     ; Copy initial filename and add extension to it
     copy_name:
         mov al, [si]                ; mov first char of filename in al
@@ -167,12 +167,12 @@ org 100h
         ;PRINTN 'Bytes read: '
             
         cmp ax, [pass_len]          ; compare bytes read with password length
-        jb password_too_long        ;  error if password length < text read
+        jb password_too_long        ; error if password length < text read
         
         mov si, 0                   ; prepare index to iterate through buffer
         mov cx, [bytes_read]        ; counter
         mov di, 0                   ; iterate through password
-        
+                 
         ; XOR operation
         print_n_xor_loop:
             mov al, [buffer+si]     ; mov (buffer address + si) to al for xoring
@@ -204,7 +204,7 @@ org 100h
         ; Write xored bytes to file
         mov bx, [out_handle]        ; put output_file handle in bx
         mov dx, offset buffer       ; put buffer address in dx
-        mov cx, [bytes_read]        ; put number of bytes read in cx
+        mov cx, [bytes_read]        ; put number of bytes read in cx to write them
         mov ah, 40h                 ; write to file interrupt
         int 21h                     ; call interrupt
         jc write_failed             ; failed write
